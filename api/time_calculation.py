@@ -1,5 +1,7 @@
 from .models import StoreStatus,  ReportStatus , StoreStatusLog , StoreReport , Store , StoreTimings
-import datetime
+from datetime import datetime , timedelta
+from pytz import timezone as pytz_timezone
+
 def get_last_one_hour_data(store, utc_time, current_day, local_time):
     last_one_hour_data = {"uptime" : 0 , "downtime" : 0}
     # checking if store is open in last one hour
@@ -68,8 +70,8 @@ def get_last_one_week_data(store, utc_time, current_day, current_time):
     
     return last_one_week_data
 
-def get_all_data(store, utc_time, current_day, current_time):
-    last_one_week_data = {"uptime" : 0 , "downtime" : 0}
+def get_all_data(store, utc_time, current_day, current_time , timezone):
+    last_one_week_data = {"uptime_hour" : 0 , "downtime_hour" : 0 , "uptime_day" : 0 , "downtime_day" : 0 , "uptime_week" : 0 , "downtime_week" : 0}
     one_week_ago = current_day - 7 if current_day > 0 else 0
     # checking if store is open in last one week
     # is_store_open = store.timings.filter(day__gte=one_week_ago,day__lte=current_day,start_time__lte=current_time,end_time__gte=current_time).exists()
@@ -82,22 +84,44 @@ def get_all_data(store, utc_time, current_day, current_time):
     logs_len = len(last_one_week_logs)
     for log in last_one_week_logs:
         # checkig if log is in store business hours
+        store_timezone = pytz_timezone(timezone)
+        timestamp_utc = log.timestamp
+        local_time = timestamp_utc.astimezone(store_timezone)
         log_in_store_business_hours = store_hours.filter(
             day=log.timestamp.weekday(),
-            start_time__lte=log.timestamp.time(),
-            end_time__gte=log.timestamp.time()
+            start_time__lte=local_time,
+            end_time__gte=local_time
             ).exists()
         # checking if log is in store business hours and status is active
+        store_time = store_hours.filter(day = log.timestamp.weekday())
         if not log_in_store_business_hours:
             continue
-        if log.status == StoreStatus.ACTIVE:
-            if index != len - 1:
-                time_active = min(60 , log[log_index + 1].timestamp - log[index])
-            else:
-                time_active = min(60 , current_time - log.timestamp)
-            last_one_week_data["uptime"] += 1
+        status_interval_time = 0;
+        if index != len - 1:
+            status_interval_time = min(60 , ((log[log_index + 1].timestamp - log[index].timestamp).seconds)/60)
         else:
-            last_one_week_data["downtime"] += 1
+            status_interval_time = min(60 , store_time.end_time - local_time.time())
+
+        if log.status == StoreStatus.ACTIVE:
+            if current_time - timestamp_utc <= timedelta(hours = 1):
+                last_one_week_data["uptime_hour"] += status_interval_time
+                last_one_week_data["uptime_day"] += status_interval_time
+                last_one_week_data["uptime_week"] += status_interval_time
+            if current_time - timestamp_utc <= timedelta(days = 1):
+                last_one_week_data["uptime_day"] += status_interval_time
+                last_one_week_data["uptime_week"] += status_interval_time
+            if current_time - timestamp_utc <= timedelta(days = 7):
+                last_one_week_data["uptime_week"] += status_interval_time
+        else:
+            if current_time - timestamp_utc <= timedelta(hours = 1):
+                last_one_week_data["uptime_hour"] -= status_interval_time
+                last_one_week_data["uptime_day"] -= status_interval_time
+                last_one_week_data["uptime_week"] -= status_interval_time
+            if current_time - timestamp_utc <= timedelta(days = 1):
+                last_one_week_data["uptime_day"] -= status_interval_time
+                last_one_week_data["uptime_week"] -= status_interval_time
+            if current_time - timestamp_utc <= timedelta(days = 7):
+                last_one_week_data["uptime_week"] -= status_interval_time
         index += 1
     
     return last_one_week_data

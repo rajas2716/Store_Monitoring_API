@@ -1,7 +1,7 @@
 # Store Monitoring System
 Video Link : https://www.loom.com/share/a110da1f72354a739a91f74d1cd02e86?sid=754544b1-456b-4432-8344-856b0689948e
 ## API Requirements
-1)	{store_id}/trigger_report/
+1)	/trigger_report/
 2)	get_report/
 3)	Background task which precomputes the report for each store_id every hour and also updates it in the combined_report.csv file
 

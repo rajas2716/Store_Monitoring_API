@@ -144,5 +144,12 @@ Then generate_combined_csv_file can go and update data in corresponding rows of 
 
 Note: One Precomputation function precomputes and stores combined report of all the stores in a csv file beforehand.
 Celery task just updates selected data for selected stores every hour.
+## Sample Outputs
+# 1) Trigger_report/
+![trigger](https://github.com/rajas2716/Store_Monitoring_API/blob/master/Documentation/trigger.png)
 
-![trigger](https://github.com/rajas2716/Store_Monitoring_API/blob/master/Documentation/combinedReport.png)
+# 2) getReport/
+![getReport](https://github.com/rajas2716/Store_Monitoring_API/blob/master/Documentation/getReport.png)
+
+# 3) combinedReport
+![combinedReport](https://github.com/rajas2716/Store_Monitoring_API/blob/master/Documentation/combinedReport.png)

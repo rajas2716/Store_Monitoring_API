@@ -5,7 +5,7 @@ import tempfile , csv , os
 
 def run():
     # Your task code here
-    store_ids = Store.objects.values_list('store_id', flat=True).distinct()[:10]
+    store_ids = Store.objects.values_list('store_id', flat=True).distinct()[:200]
     csv_data = []
     for store_id in store_ids:
         store = Store.objects.filter(store_id = store_id).first()
